@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Study Calendar</title>
+  <style>
+    body { font-family: Arial; background: #f0f8ff; margin: 0; }
+    .header { background: #4a90e2; color: white; padding: 15px; text-align: center; }
+    table { width: 90%; max-width: 800px; margin: 20px auto; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; vertical-align: top; }
+    td { height: 80px; cursor: pointer; }
+    .task { background: #ffeb3b; padding: 3px 6px; margin: 2px; border-radius: 3px; font-size: 0.9em; }
+    .today { background: #e3f2fd; }
+    dialog { padding: 20px; border-radius: 10px; }
+    input, button { padding: 8px; margin: 5px 0; }
+    button { background: #4a90e2; color: white; border: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>Study Calendar</h2>
+    <p>Hello, <b>{{ request.args.get('name', 'Student') }}</b> | <a href="/logout" style="color:white;">Logout</a></p>
+  </div>
+
+  <table>
+    <tr><th>Sun</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th></tr>
+    <tbody id="body"></tbody>
+  </table>
+
+  <dialog id="modal">
+    <h3 id="date"></h3>
+    <input id="task" placeholder="Add study task">
+    <button onclick="save()">Save</button>
+    <button onclick="modal.close()">Close</button>
+  </dialog>
+
+  <script>
+    const body = document.getElementById('body');
+    const modal = document.getElementById('modal');
+    const dateEl = document.getElementById('date');
+    let selected = '';
+
+    function render() {
+      body.innerHTML = '';
+      const first = new Date(2025,10,1).getDay();
+      const days = 30;
+      let row = document.createElement('tr');
+      for (let i = 0; i < first; i++) row.innerHTML += '<td></td>';
+      for (let d = 1; d <= days; d++) {
+        if ((first + d - 1) % 7 === 0) { body.appendChild(row); row = document.createElement('tr'); }
+        const cell = document.createElement('td');
+        cell.innerHTML = `<div><b>${d}</b></div>`;
+        const key = `2025-11-${d}`;
+        JSON.parse(localStorage.getItem(key) || '[]').forEach(t => {
+          const div = document.createElement('div');
+          div.className = 'task';
+          div.textContent = t;
+          cell.appendChild(div);
+        });
+        if (d === 6) cell.classList.add('today');
+        cell.onclick = () => { selected = key; dateEl.textContent = d + ' Nov 2025'; modal.showModal(); };
+        row.appendChild(cell);
+      }
+      body.appendChild(row);
+    }
+
+    function save() {
+      const task = document.getElementById('task').value.trim();
+      if (!task) return;
+      const tasks = JSON.parse(localStorage.getItem(selected) || '[]');
+      tasks.push(task);
+      localStorage.setItem(selected, JSON.stringify(tasks));
+      modal.close();
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
